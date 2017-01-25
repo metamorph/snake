@@ -32,18 +32,22 @@
   "Move the snake. If it hits the bounds - declare the state as 'dead'."
   ([state] (move state false))
   ([{:keys [direction body bounds] :as state} grow?]
-   (let [head           (first body)
-         new-head       (mapv + (direction direction->coord) head)
-         new-body       (conj body new-head)
-         [width height] bounds]
-     (if (within-bounds? width height new-head)
-       (assoc state :body (drop-last (if grow? 0 1) new-body))
-       (assoc state :dead? true)))))
+   (if (:dead? state)
+     state
+     (let [head           (first body)
+          new-head       (mapv + (direction direction->coord) head)
+          new-body       (conj body new-head)
+          [width height] bounds]
+      (if (within-bounds? width height new-head)
+        (assoc state :body (drop-last (if grow? 0 1) new-body))
+        (assoc state :dead? true))))))
 
 (defn turn
   "Make a turn - set the new direction."
   [{direction :direction :as state} turn]
-  (assoc state :direction (turn->direction direction turn)))
+  (if (#{:left :right} turn)
+    (assoc state :direction (turn->direction direction turn))
+    state))
 
 (defn make-body
   "Create a snake body with a given size and a facing direction"
