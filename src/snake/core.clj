@@ -27,6 +27,9 @@
        (< x width)
        (< y height)))
 
+(defn head-overlaps-body? [[head & body]]
+  (not (empty? (filter #(= head %) body))))
+
 (defn move
   "Move the snake. If it hits the bounds - declare the state as 'dead'."
   ([state] (move state false))
@@ -37,7 +40,8 @@
           new-head       (mapv + (direction direction->coord) head)
           new-body       (conj body new-head)
           [width height] bounds]
-      (if (within-bounds? width height new-head)
+       ;; TODO: Check if the snake crosses itself!
+       (if (within-bounds? width height new-head)
         (assoc state :body (drop-last (if grow? 0 1) new-body))
         (assoc state :dead? true))))))
 
