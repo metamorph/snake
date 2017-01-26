@@ -8,17 +8,16 @@
 (defn turn->direction
   "This is pretty ugly - should be an easier way to do it?"
   [direction turn]
-  (case turn
-    :left (case direction
-            :up :left
-            :right :up
-            :down :right
-            :left :down)
-    :right (case direction
-             :up :right
-             :right :down
-             :down :left
-             :left :up)))
+  (case [direction turn]
+    [:up :left] :left
+    [:up :right] :right
+    [:down :left] :left
+    [:down :right] :right
+    [:left :up] :up
+    [:left :down] :down
+    [:right :down] :down
+    [:right :up] :up
+    direction))
 
 (defn within-bounds?
   "Check if a coordinate is within bounds."
@@ -45,9 +44,7 @@
 (defn turn
   "Make a turn - set the new direction."
   [{direction :direction :as state} turn]
-  (if (#{:left :right} turn)
-    (assoc state :direction (turn->direction direction turn))
-    state))
+  (assoc state :direction (turn->direction direction turn)))
 
 (defn make-body
   "Create a snake body with a given size and a facing direction"
