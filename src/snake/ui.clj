@@ -23,19 +23,23 @@
   (if (:dead? state)
     (q/background 127 10 10)
     (q/background 255 255 255))
-  (let [[head & tail] (:body state)]
-    (q/fill 200 127 127)
+  (let [[head & tail] (:body state)
+        apples (:apples state)]
+    (q/fill 127 127 200)
     (apply draw-at head)
     (q/fill 255 127 127)
-    (doseq [cell tail] (apply draw-at cell))))
+    (doseq [cell tail] (apply draw-at cell))
+    (q/fill 255 0 0)
+    (doseq [pos apples] (apply draw-at pos))))
 
 (defn next-state [state]
-  (if (:running? state)
+  (if (and (:running? state) (not (:dead? state)))
     ;; Check if an apple is in our path.
     ;; In that case - remove the apple and tell the snake to grow.
-    (move state
-          (= (mod (q/frame-count) 60) 0) ;; Make the snake grow every 60th frame.
-          )
+    (move
+     (if (= (mod (q/frame-count) 100) 0)
+       (add-random-apple state)
+       state))
     state))
 
 (defn on-key [state {:keys [key raw-key] :as evt}]

@@ -47,6 +47,27 @@
          (assoc state :body (drop-last (if grow? 0 1) new-body))
          (assoc state :dead? true))))))
 
+;; -- TODO: Add apples that will disappear after a time. Add a ttl entry to an apple - draw them in changing colors.
+
+(defn add-apple-at [state pos]
+  (update state :apples conj pos))
+
+(defn apple-at? [{apples :apples} pos] (some? ((set apples) pos)))
+(defn body-at? [{body :body} pos] (some? ((set body) pos)))
+
+(defn add-random-apple [{[width height] :bounds
+                         apples          :apples
+                         body            :body
+                         :as             state}]
+  ;; This could be a bug if the entire field is filled with snake or apples.
+  (add-apple-at state
+                (first (drop-while
+                        (fn [pos] (or (apple-at? state pos)
+                                     (body-at? state pos)))
+                        (repeatedly (fn []
+                                      [(rand-int width)
+                                       (rand-int height)]))))))
+
 (defn turn
   "Make a turn - set the new direction."
   [{direction :direction :as state} turn]
