@@ -30,6 +30,10 @@
 (defn head-overlaps-body? [[head & body]]
   (not (empty? (filter #(= head %) body))))
 
+(defn alive? [body [width height]]
+  (and (within-bounds? width height (first body))
+       (not (head-overlaps-body? body))))
+
 (defn move
   "Move the snake. If it hits the bounds - declare the state as 'dead'."
   ([state] (move state false))
@@ -37,13 +41,11 @@
    (if (:dead? state)
      state
      (let [head           (first body)
-          new-head       (mapv + (direction direction->coord) head)
-          new-body       (conj body new-head)
-          [width height] bounds]
-       ;; TODO: Check if the snake crosses itself!
-       (if (within-bounds? width height new-head)
-        (assoc state :body (drop-last (if grow? 0 1) new-body))
-        (assoc state :dead? true))))))
+           new-head       (mapv + (direction direction->coord) head)
+           new-body       (conj body new-head)]
+       (if (alive? new-body bounds)
+         (assoc state :body (drop-last (if grow? 0 1) new-body))
+         (assoc state :dead? true))))))
 
 (defn turn
   "Make a turn - set the new direction."
