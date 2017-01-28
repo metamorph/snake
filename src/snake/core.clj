@@ -34,6 +34,9 @@
   (and (within-bounds? width height (first body))
        (not (head-overlaps-body? body))))
 
+(defn next-head [position direction]
+  (mapv + (direction direction->coord) position))
+
 (defn move
   "Move the snake. If it hits the bounds - declare the state as 'dead'."
   ([state] (move state false))
@@ -41,7 +44,7 @@
    (if (:dead? state)
      state
      (let [head           (first body)
-           new-head       (mapv + (direction direction->coord) head)
+           new-head       (next-head head direction)
            new-body       (conj body new-head)]
        (if (alive? new-body bounds)
          (assoc state :body (drop-last (if grow? 0 1) new-body))
@@ -52,7 +55,7 @@
 (defn add-apple-at [state pos]
   (update state :apples conj pos))
 
-(defn apple-at? [{apples :apples} pos] (some? ((set apples) pos)))
+(defn apple-at? [{apples :apples :as state} pos] (some? ((set apples) pos)))
 (defn body-at? [{body :body} pos] (some? ((set body) pos)))
 
 (defn add-random-apple [{[width height] :bounds
@@ -81,9 +84,11 @@
 
 (defn make-state
   "Create the initial state."
-  ([width height position direction size] {:bounds [width height]
-                                           :direction direction
-                                           :body (make-body position size direction)})
+  ([width height position direction size] (add-random-apple
+                                           {:bounds    [width height]
+                                            :direction direction
+                                            :apples #{}
+                                            :body      (make-body position size direction)}))
   ([width height] (make-state width height
                               [(quot width 2) (quot height 2)]
                               :up

@@ -7,7 +7,7 @@
 (def ^:dynamic *cell-size* 10)
 
 (defn initialize []
-  (q/frame-rate 30)
+  (q/frame-rate 20)
   (assoc
    (make-state (/ (q/width) *cell-size*)
                (/ (q/height) *cell-size*))
@@ -17,6 +17,11 @@
   (q/rect (* x *cell-size*)
           (* y *cell-size*)
           *cell-size* *cell-size*))
+(defn draw-circle-at [x y]
+  (q/ellipse-mode :corner)
+  (q/ellipse (* x *cell-size*)
+             (* y *cell-size*)
+             *cell-size* *cell-size*))
 
 (defn draw [state]
   (q/clear)
@@ -30,16 +35,19 @@
     (q/fill 255 127 127)
     (doseq [cell tail] (apply draw-at cell))
     (q/fill 255 0 0)
-    (doseq [pos apples] (apply draw-at pos))))
+    (doseq [pos apples] (apply draw-circle-at pos))))
 
 (defn next-state [state]
   (if (and (:running? state) (not (:dead? state)))
-    ;; Check if an apple is in our path.
-    ;; In that case - remove the apple and tell the snake to grow.
-    (move
-     (if (= (mod (q/frame-count) 100) 0)
-       (add-random-apple state)
-       state))
+    (let [{[head & _] :body
+           direction  :direction} state
+          next-head               (next-head head direction)
+          eat-apple?              (apple-at? state next-head)]
+      (if eat-apple?
+        (-> (move state true)
+            (add-random-apple)
+            (update :apples disj next-head))
+        (move state false)))
     state))
 
 (defn on-key [state {:keys [key raw-key] :as evt}]
