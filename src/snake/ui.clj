@@ -1,17 +1,43 @@
 (ns snake.ui
-  (:require [quil
+  (:require [clojure.java.io :as io]
+            [quil
              [core :as q]
              [middleware :as m]]
             [snake.core :refer :all]))
 
+(defn load-clip [resource]
+  (let [stream (javax.sound.sampled.AudioSystem/getAudioInputStream (io/resource resource))
+        info (javax.sound.sampled.DataLine$Info. javax.sound.sampled.Clip (.getFormat stream))]
+    (doto (javax.sound.sampled.AudioSystem/getLine info)
+      (.open stream))))
+
+(defn play-clip [clip]
+  (doto clip
+    (.setFramePosition 0)
+    (.start)))
+
+(defn make-sounds [] {:nom [(load-clip "NomNom.wav")
+                            (load-clip "NomNom2.wav")
+                            (load-clip "NomNom3.wav")]
+                      :game-over [(load-clip "GameOver.wav")
+                                  (load-clip "GameOver2.wav")
+                                  (load-clip "GameOver3.wav")]})
+
+(defn play-sound [{sounds :sounds :as state} sound]
+  (let [candidates (sound sounds)
+        picked (get candidates (rand-int (count candidates)))]
+    (play-clip picked))
+  state)
+
 (def ^:dynamic *cell-size* 10)
 
 (defn initialize []
-  (q/frame-rate 20)
-  (assoc
+  (q/frame-rate 15)
+  (->
    (make-state (/ (q/width) *cell-size*)
                (/ (q/height) *cell-size*))
-   :running? false))
+   (assoc :running? false)
+   (assoc :sounds (make-sounds))))
 
 (defn draw-at [x y]
   (q/rect (* x *cell-size*)
@@ -52,11 +78,19 @@
            direction  :direction} state
           next-head               (next-head head direction)
           eat-apple?              (apple-at? state next-head)]
-      (if eat-apple?
-        (-> (move state true)
-            (add-random-apple)
-            (update :apples disj next-head))
-        (move state false)))
+      (let [new-state (move state eat-apple?)]
+        (if (:dead? new-state)
+
+          (play-sound new-state :game-over)
+
+          (if eat-apple?
+           (do
+             (-> new-state
+                 (play-sound :nom)
+                 (add-random-apple)
+                 (update :apples disj next-head)))
+
+           new-state))))
     state))
 
 (defn on-key [state {:keys [key raw-key] :as evt}]
@@ -70,7 +104,6 @@
           (assoc :running? dorun?)
           (turn (:key evt))))))
 
-
 (defn start-sketch []
   (q/sketch
    :features [:keep-on-top :no-safe-fns]
@@ -80,3 +113,4 @@
    :update #'next-state
    :size [500 500]
    :middleware [m/fun-mode]))
+
