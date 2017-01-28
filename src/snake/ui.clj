@@ -84,13 +84,13 @@
           (play-sound new-state :game-over)
 
           (if eat-apple?
-           (do
-             (-> new-state
-                 (play-sound :nom)
-                 (add-random-apple)
-                 (update :apples disj next-head)))
+            (do
+              (-> new-state
+                  (play-sound :nom)
+                  (add-random-apple)
+                  (update :apples disj next-head)))
 
-           new-state))))
+            new-state))))
     state))
 
 (defn on-key [state {:keys [key raw-key] :as evt}]

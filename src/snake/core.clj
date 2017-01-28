@@ -66,7 +66,7 @@
   (add-apple-at state
                 (first (drop-while
                         (fn [pos] (or (apple-at? state pos)
-                                     (body-at? state pos)))
+                                      (body-at? state pos)))
                         (repeatedly (fn []
                                       [(rand-int width)
                                        (rand-int height)]))))))
