@@ -26,15 +26,24 @@
 (defn draw [state]
   (q/clear)
   (if (:dead? state)
-    (q/background 127 10 10)
+    (do
+      (q/background 200 100 100)
+      (q/fill 0 0 0)
+      (q/text-align :center :baseline)
+      (q/text "YOU DIED! Press 'R' to restart."
+              (quot (q/width) 2)
+              (quot (q/height) 2)))
     (q/background 255 255 255))
   (let [[head & tail] (:body state)
         apples (:apples state)]
-    (q/fill 127 127 200)
+    (q/fill 0 0 0)
+    (q/text-align :left :top)
+    (q/text (format "Score: %d" (- (count (:body state)) 2)) 20 20)
+    (q/fill 0 0 0)
     (apply draw-at head)
     (q/fill 255 127 127)
     (doseq [cell tail] (apply draw-at cell))
-    (q/fill 255 0 0)
+    (q/fill 100 200 100)
     (doseq [pos apples] (apply draw-circle-at pos))))
 
 (defn next-state [state]
@@ -54,10 +63,12 @@
   (let [dorun? (if (= raw-key \space)
                  (not (:running? state))
                  (:running? state))]
-    (-> state
-        (assoc :event evt)
-        (assoc :running? dorun?)
-        (turn (:key evt)))))
+    (if (= :r key)
+      (initialize)
+      (-> state
+          (assoc :event evt)
+          (assoc :running? dorun?)
+          (turn (:key evt))))))
 
 
 (defn start-sketch []
